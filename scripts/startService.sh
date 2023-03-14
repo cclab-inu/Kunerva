@@ -6,7 +6,7 @@ export KNOX_AUTO_HOME=`dirname $(realpath "$0")`/..
 export DB_DRIVER=mysql
 export DB_PORT=3306
 export DB_USER=root
-export DB_PASS=password
+export DB_PASS=Seungsoo1004!
 export DB_NAME=flow_management
 export DB_HOST=127.0.0.1
 
@@ -21,7 +21,7 @@ export OUT_DIR=$KNOX_AUTO_HOME/policies/
 export DISCOVERY_MODE=egress+ingress
 
 # available network log source: hubble | db
-export NETWORK_LOG_FROM=db
+export NETWORK_LOG_FROM=hubble
 
 # cilium hubble info (if connect to hubble directly)
 export HUBBLE_URL=127.0.0.1

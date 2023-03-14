@@ -273,3 +273,48 @@ func InsertDiscoveredPoliciesToMySQL(policies []types.KnoxNetworkPolicy) error {
 
 	return nil
 }
+
+// insertNetworkLog function
+func insertNetworkLog(db *sql.DB, log types.NetworkLogEvent) error {
+	stmt, err := db.Prepare("INSERT INTO " + TableNetworkFlow + "(apiVersion,kind,name,namespace,type,rule,status,outdated,spec,generatedTime) values(?,?,?,?,?,?,?,?,?,?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	// specPointer := &log.Spec
+	// spec, err := json.Marshal(specPointer)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// _, err = stmt.Exec(log.APIVersion,
+	// 	log.Kind,
+	// 	log.Metadata["name"],
+	// 	log.Metadata["namespace"],
+	// 	log.Metadata["type"],
+	// 	log.Metadata["rule"],
+	// 	log.Metadata["status"],
+	// 	log.Outdated,
+	// 	spec,
+	// 	log.GeneratedTime)
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
+}
+
+// InsertNetworkLogToMySQL function
+func InsertNetworkLogToMySQL(netLogs []types.NetworkLogEvent) error {
+	db := ConnectMySQL()
+	defer db.Close()
+
+	for _, log := range netLogs {
+		if err := insertNetworkLog(db, log); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

@@ -1614,6 +1614,7 @@ func StartToDiscoverNetworkPolicies() {
 	if NetworkLogFrom == "db" {
 		log.Info().Msg("Get network traffic from the database")
 
+		plugin.PushTrafficFlowToDB()
 		results := libs.GetTrafficFlowFromDB()
 		if len(results) == 0 {
 			return
@@ -1700,11 +1701,9 @@ func StartToDiscoverNetworkPolicies() {
 func StartCronJob() {
 	log.Info().Msg("Auto discovery cron job started")
 
-	// if network from hubble
-	if NetworkLogFrom == "hubble" {
-		go plugin.StartHubbleRelay(StopChan, &WaitG)
-		WaitG.Add(1)
-	}
+	// just do consume the feeds from hubble
+	go plugin.StartHubbleRelay(StopChan, &WaitG)
+	WaitG.Add(1)
 
 	// init cron job
 	c := cron.New()

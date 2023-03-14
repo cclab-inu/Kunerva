@@ -203,3 +203,12 @@ func InsertDiscoveredPolicies(policies []types.KnoxNetworkPolicy) {
 		}
 	}
 }
+
+// InsertNetworkLog function
+func InsertNetworkLog(netLogs []types.NetworkLogEvent) {
+	if DBDriver == "mysql" {
+		if err := InsertNetworkLogToMySQL(netLogs); err != nil {
+			log.Error().Msg(err.Error())
+		}
+	}
+}

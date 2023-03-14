@@ -690,6 +690,11 @@ func GetCiliumFlowsFromHubble() []*flow.Flow {
 	return results
 }
 
+// PushTrafficFlowToDB function
+func PushTrafficFlowToDB() {
+
+}
+
 // StartHubbleRelay function
 func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 	conn := ConnectHubbleRelay()
@@ -729,6 +734,10 @@ func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 					CiliumFlowsMutex.Lock()
 					CiliumFlows = append(CiliumFlows, flow)
 					CiliumFlowsMutex.Unlock()
+
+					if len(CiliumFlows)%100 == 0 {
+						log.Info().Msg("network flow appended from hubble of file: " + strconv.Itoa(len(CiliumFlows)))
+					}
 				}
 			}
 		}
