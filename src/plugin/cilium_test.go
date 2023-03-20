@@ -84,7 +84,7 @@ func TestConvertCiliumFlowToKnoxLog(t *testing.T) {
 	flow := &flow.Flow{}
 	json.Unmarshal(flowBytes, flow)
 
-	expected := &types.K8sNetworkLog{}
+	expected := &types.NetworkLog{}
 	json.Unmarshal(logBytes, expected)
 
 	dnsToIPs := map[string][]string{}

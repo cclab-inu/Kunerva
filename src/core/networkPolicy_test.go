@@ -26,9 +26,9 @@ func TestGenerateNetworkPolicies(t *testing.T) {
 		}
 	*/
 	logB := []byte("{\"src_namespace\":\"multiubuntu\",\"src_pod_name\":\"ubuntu-1-deployment-5ff5974cd4-dfdgt\",\"dst_namespace\":\"multiubuntu\",\"dst_pod_name\":\"ubuntu-4-deployment-5bbd4f6c69-frhlk\",\"protocol\":6,\"src_ip\":\"10.0.2.74\",\"dst_ip\":\"10.0.1.55\",\"src_port\":58404,\"dst_port\":8080,\"direction\":\"EGRESS\",\"action\":\"allow\"}")
-	log := types.K8sNetworkLog{}
+	log := types.NetworkLog{}
 	json.Unmarshal(logB, &log)
-	logs := []types.K8sNetworkLog{log}
+	logs := []types.NetworkLog{log}
 
 	/*
 		{

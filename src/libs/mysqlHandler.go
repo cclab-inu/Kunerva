@@ -11,6 +11,12 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+func init() {
+	CreateTableNetworkPolicyMySQL()
+	CreateTableNetworkLogsMySQL()
+	ClearDBTablesMySQL()
+}
+
 // ConnectMySQL function
 func ConnectMySQL() (db *sql.DB) {
 	db, err := sql.Open(DBDriver, DBUser+":"+DBPass+"@tcp("+DBHost+":"+DBPort+")/"+DBName)
@@ -22,7 +28,98 @@ func ConnectMySQL() (db *sql.DB) {
 	return db
 }
 
-// QueryBaseSimple ...
+// =========== //
+// == Table == //
+// =========== //
+
+func ClearDBTablesMySQL() error {
+	db := ConnectMySQL()
+	defer db.Close()
+
+	query := "DELETE FROM " + TableNetworkFlow
+	if _, err := db.Query(query); err != nil {
+		return err
+	}
+
+	query = "DELETE FROM " + TableDiscoveredPolicy
+	if _, err := db.Query(query); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CreateTableNetworkPolicyMySQL() error {
+	db := ConnectMySQL()
+	defer db.Close()
+
+	tableName := TableDiscoveredPolicy
+
+	query :=
+		"CREATE TABLE IF NOT EXISTS `" + tableName + "` (" +
+			"	`id` int NOT NULL AUTO_INCREMENT," +
+			"	`apiVersion` varchar(20) DEFAULT NULL," +
+			"	`kind` varchar(20) DEFAULT NULL," +
+			"	`flow_ids` JSON DEFAULT NULL," +
+			"	`name` varchar(50) DEFAULT NULL," +
+			"	`cluster_name` varchar(50) DEFAULT NULL," +
+			"	`namespace` varchar(50) DEFAULT NULL," +
+			"	`type` varchar(10) DEFAULT NULL," +
+			"	`rule` varchar(30) DEFAULT NULL," +
+			"	`status` varchar(10) DEFAULT NULL," +
+			"	`outdated` varchar(50) DEFAULT NULL," +
+			"	`spec` JSON DEFAULT NULL," +
+			"	`generatedTime` bigint NOT NULL," +
+			"	`updatedTime` bigint NOT NULL," +
+			"	PRIMARY KEY (`id`)" +
+			"  );"
+
+	if _, err := db.Query(query); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CreateTableNetworkLogsMySQL() error {
+	db := ConnectMySQL()
+	defer db.Close()
+
+	tableName := TableNetworkFlow
+
+	query :=
+		"CREATE TABLE IF NOT EXISTS `" + tableName + "` (" +
+			"	`id` integer NOT NULL PRIMARY KEY AUTO_INCREMENT," +
+			"	`time` INTEGER DEFAULT NULL," +
+			"	`verdict` varchar(100) DEFAULT NULL," +
+			"	`drop_reason` INTEGER DEFAULT NULL," +
+			"	`ethernet` JSON DEFAULT NULL," +
+			"	`ip` JSON DEFAULT NULL," +
+			"	`l4` JSON DEFAULT NULL," +
+			"	`source` JSON DEFAULT NULL," +
+			"	`destination` JSON DEFAULT NULL," +
+			"	`type` INTEGER DEFAULT NULL," +
+			"	`l7` JSON DEFAULT NULL," +
+			"	`reply` BOOLEAN," +
+			"	`src_cluster_name` varchar(100) DEFAULT NULL," +
+			"	`dest_cluster_name` varchar(100) DEFAULT NULL," +
+			"	`src_pod_name` varchar(100) DEFAULT NULL," +
+			"	`dest_pod_name` varchar(100) DEFAULT NULL," +
+			"	`node_name` varchar(100) DEFAULT NULL," +
+			"	`event_type` JSON DEFAULT NULL," +
+			"	`source_service` JSON DEFAULT NULL," +
+			"	`destination_service` JSON DEFAULT NULL," +
+			"	`traffic_direction` INTEGER DEFAULT NULL," +
+			"	`policy_match_type` INTEGER DEFAULT NULL," +
+			"	`trace_observation_point` INTEGER DEFAULT NULL," +
+			"	`summary` varchar(1000) DEFAULT NULL" +
+			" 	);"
+
+	_, err := db.Query(query)
+	return err
+}
+
+// QueryBaseSimple
 var QueryBaseSimple string = "select id,time,traffic_direction,verdict,policy_match_type,drop_reason,event_type,source,destination,ip,l4,l7 from "
 
 // flowScannerToCiliumFlow scans the trafficflow.
@@ -274,47 +371,51 @@ func InsertDiscoveredPoliciesToMySQL(policies []types.KnoxNetworkPolicy) error {
 	return nil
 }
 
-// insertNetworkLog function
-func insertNetworkLog(db *sql.DB, log types.NetworkLogEvent) error {
-	stmt, err := db.Prepare("INSERT INTO " + TableNetworkFlow + "(apiVersion,kind,name,namespace,type,rule,status,outdated,spec,generatedTime) values(?,?,?,?,?,?,?,?,?,?)")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	// specPointer := &log.Spec
-	// spec, err := json.Marshal(specPointer)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// _, err = stmt.Exec(log.APIVersion,
-	// 	log.Kind,
-	// 	log.Metadata["name"],
-	// 	log.Metadata["namespace"],
-	// 	log.Metadata["type"],
-	// 	log.Metadata["rule"],
-	// 	log.Metadata["status"],
-	// 	log.Outdated,
-	// 	spec,
-	// 	log.GeneratedTime)
-	// if err != nil {
-	// 	return err
-	// }
-
-	return nil
-}
-
-// InsertNetworkLogToMySQL function
-func InsertNetworkLogToMySQL(netLogs []types.NetworkLogEvent) error {
+// InsertNetworkLogsMySQL -- Update existing log with time and count
+func InsertNetworkLogsMySQL(netLogs []types.NetworkLogRaw) error {
+	var err error = nil
 	db := ConnectMySQL()
 	defer db.Close()
 
-	for _, log := range netLogs {
-		if err := insertNetworkLog(db, log); err != nil {
-			return err
+	for _, netLog := range netLogs {
+		if err := insertNetLogMySQL(db, netLog); err != nil {
+			log.Error().Msg(err.Error())
 		}
 	}
+	return err
+}
 
-	return nil
+func insertNetLogMySQL(db *sql.DB, netLog types.NetworkLogRaw) error {
+	var err error
+
+	insertQueryString := `(time,verdict,drop_reason,ip,l4,source,destination,l7,event_type,traffic_direction,policy_match_type) 
+		VALUES (?,?,?,?,?,?,?,?,?,?,?)`
+
+	query := "INSERT INTO " + TableNetworkFlow + insertQueryString
+
+	insertStmt, err := db.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer insertStmt.Close()
+
+	// var id, time, verdict, policyMatchType, dropReason, direction uint32
+	_, err = insertStmt.Exec(
+		netLog.Time,
+		netLog.Verdict,
+		netLog.DropReason,
+		netLog.IP,
+		netLog.L4,
+		netLog.Source,
+		netLog.Destination,
+		netLog.L7,
+		netLog.EventType,
+		netLog.TrafficDirection,
+		netLog.PolicyMatchType)
+
+	if err != nil {
+		log.Error().Msg(err.Error())
+	}
+
+	return err
 }
