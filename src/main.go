@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/accuknox/knoxAutoPolicy/src/core"
-	"github.com/accuknox/knoxAutoPolicy/src/libs"
+	core "github.com/cclab-inu/Kunerva/src/core"
+	libs "github.com/cclab-inu/Kunerva/src/libs"
 )
 
 func main() {

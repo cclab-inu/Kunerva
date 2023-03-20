@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/accuknox/knoxAutoPolicy/src/libs"
-	"github.com/accuknox/knoxAutoPolicy/src/plugin"
-	"github.com/accuknox/knoxAutoPolicy/src/types"
+	"github.com/cclab-inu/Kunerva/src/libs"
+	"github.com/cclab-inu/Kunerva/src/plugin"
+	"github.com/cclab-inu/Kunerva/src/types"
 
 	"github.com/cilium/cilium/api/v1/flow"
 	"github.com/google/go-cmp/cmp"
@@ -840,7 +840,7 @@ func buildNetworkPolicies(namespace string, services []types.Service, mergedSrcP
 // =========================================== //
 
 // checkExternalService Function
-func checkExternalService(log types.KnoxNetworkLog, endpoints []types.Endpoint) (types.Endpoint, bool) {
+func checkExternalService(log types.K8sNetworkLog, endpoints []types.Endpoint) (types.Endpoint, bool) {
 	for _, endpoint := range endpoints {
 		for _, port := range endpoint.Endpoints {
 			if (libs.GetProtocol(log.Protocol) == strings.ToLower(port.Protocol)) &&
@@ -855,7 +855,7 @@ func checkExternalService(log types.KnoxNetworkLog, endpoints []types.Endpoint) 
 }
 
 // getSimpleDst Function
-func getSimpleDst(log types.KnoxNetworkLog, endpoints []types.Endpoint, cidrBits int) (Dst, bool) {
+func getSimpleDst(log types.K8sNetworkLog, endpoints []types.Endpoint, cidrBits int) (Dst, bool) {
 	dstPort := 0
 	externalInfo := ""
 
@@ -932,8 +932,8 @@ func getSimpleDst(log types.KnoxNetworkLog, endpoints []types.Endpoint, cidrBits
 }
 
 // groupingLogsPerDst Function
-func groupingLogsPerDst(networkLogs []types.KnoxNetworkLog, endpoints []types.Endpoint, cidrBits int) map[Dst][]types.KnoxNetworkLog {
-	perDst := map[Dst][]types.KnoxNetworkLog{}
+func groupingLogsPerDst(networkLogs []types.K8sNetworkLog, endpoints []types.Endpoint, cidrBits int) map[Dst][]types.K8sNetworkLog {
+	perDst := map[Dst][]types.K8sNetworkLog{}
 
 	for _, log := range networkLogs {
 		dst, valid := getSimpleDst(log, endpoints, cidrBits)
@@ -942,7 +942,7 @@ func groupingLogsPerDst(networkLogs []types.KnoxNetworkLog, endpoints []types.En
 		}
 
 		if _, ok := perDst[dst]; !ok {
-			perDst[dst] = []types.KnoxNetworkLog{log}
+			perDst[dst] = []types.K8sNetworkLog{log}
 		} else {
 			perDst[dst] = append(perDst[dst], log)
 		}
@@ -1051,7 +1051,7 @@ func getMergedLabels(namespace, podName string, pods []types.Pod) string {
 }
 
 // extractingSrcFromLogs Function
-func extractingSrcFromLogs(labeledSrcsPerDst map[Dst][]SrcSimple, perDst map[Dst][]types.KnoxNetworkLog, pods []types.Pod) map[Dst][]SrcSimple {
+func extractingSrcFromLogs(labeledSrcsPerDst map[Dst][]SrcSimple, perDst map[Dst][]types.K8sNetworkLog, pods []types.Pod) map[Dst][]SrcSimple {
 	for dst, logs := range perDst {
 		srcs := []SrcSimple{}
 
@@ -1564,7 +1564,7 @@ func HandleErrRet(ret *bool) {
 // DiscoverNetworkPolicies Function
 func DiscoverNetworkPolicies(namespace string,
 	cidrBits int, // for CIDR policy (24bits in default, 32 bits -> per IP)
-	networkLogs []types.KnoxNetworkLog,
+	networkLogs []types.K8sNetworkLog,
 	services []types.Service,
 	endpoints []types.Endpoint,
 	pods []types.Pod) []types.KnoxNetworkPolicy {

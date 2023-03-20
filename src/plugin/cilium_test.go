@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/accuknox/knoxAutoPolicy/src/types"
+	"github.com/cclab-inu/Kunerva/src/types"
 	flow "github.com/cilium/cilium/api/v1/flow"
 	"github.com/google/go-cmp/cmp"
 )
@@ -84,7 +84,7 @@ func TestConvertCiliumFlowToKnoxLog(t *testing.T) {
 	flow := &flow.Flow{}
 	json.Unmarshal(flowBytes, flow)
 
-	expected := &types.KnoxNetworkLog{}
+	expected := &types.K8sNetworkLog{}
 	json.Unmarshal(logBytes, expected)
 
 	dnsToIPs := map[string][]string{}

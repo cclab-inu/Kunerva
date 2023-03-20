@@ -4,7 +4,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/accuknox/knoxAutoPolicy/src/types"
+	"github.com/cclab-inu/Kunerva/src/types"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

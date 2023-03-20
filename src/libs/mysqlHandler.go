@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/accuknox/knoxAutoPolicy/src/types"
+	"github.com/cclab-inu/Kunerva/src/types"
 	"github.com/rs/zerolog/log"
 
 	_ "github.com/go-sql-driver/mysql"

@@ -3,7 +3,7 @@ package libs
 import (
 	"testing"
 
-	"github.com/accuknox/knoxAutoPolicy/src/types"
+	"github.com/cclab-inu/Kunerva/src/types"
 	"github.com/stretchr/testify/assert"
 )
 

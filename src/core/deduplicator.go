@@ -3,8 +3,8 @@ package core
 import (
 	"strings"
 
-	"github.com/accuknox/knoxAutoPolicy/src/libs"
-	types "github.com/accuknox/knoxAutoPolicy/src/types"
+	"github.com/cclab-inu/Kunerva/src/libs"
+	types "github.com/cclab-inu/Kunerva/src/types"
 
 	"github.com/google/go-cmp/cmp"
 )

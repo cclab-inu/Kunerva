@@ -3,7 +3,7 @@ package core
 import (
 	"testing"
 
-	types "github.com/accuknox/knoxAutoPolicy/src/types"
+	types "github.com/cclab-inu/Kunerva/src/types"
 	"github.com/stretchr/testify/assert"
 )
 

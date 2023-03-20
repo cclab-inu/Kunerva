@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export KNOX_AUTO_HOME=`dirname $(realpath "$0")`/..
+export KUNERVA_HOME=`dirname $(realpath "$0")`/..
 
 # database info
 export DB_DRIVER=mysql
@@ -15,7 +15,7 @@ export TB_NETWORK_FLOW=network_flow
 export TB_DISCOVERED_POLICY=discovered_policy
 
 # output dir info
-export OUT_DIR=$KNOX_AUTO_HOME/policies/
+export OUT_DIR=$KUNERVA_HOME/policies/
 
 # available discovery modes: egress | ingress | egress+ingress
 export DISCOVERY_MODE=egress+ingress
@@ -33,4 +33,4 @@ if [ $# -eq 1 ]
     export OPERATION_MODE=$1
 fi
 
-$KNOX_AUTO_HOME/src/knoxAutoPolicy
+$KUNERVA_HOME/src/Kunerva

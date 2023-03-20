@@ -16,11 +16,46 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/accuknox/knoxAutoPolicy/src/types"
+	"github.com/cclab-inu/Kunerva/src/types"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
+
+//Basic Constant
+const (
+	STATUS     = "Passed"
+	LIMIT      = " limit "
+	BACK_SLASH = "\""
+	COMMA      = ","
+	QUOTATION  = `"`
+	INGRESS    = "INGRESS"
+	EGRESS     = "EGRESS"
+	FORWARDED  = "FORWARDED"
+	DROPPED    = "DROPPED"
+	ERROR      = "ERROR"
+	AUDIT      = "AUDIT"
+	L7         = "L7"
+	L3_L4      = "L3_L4"
+)
+
+//ConvertArrayToString - Convert Array of string to String
+func ConvertArrayToString(arr []string) string {
+	var str string
+	for _, label := range arr {
+		if !strings.HasPrefix(label, "k8s:io.cilium.") {
+			if !strings.HasPrefix(label, "k8s:io.kubernetes.") {
+				tstr := strings.TrimPrefix(label, "k8s:")
+				if str != "" {
+					str += COMMA
+				}
+				str += tstr
+			}
+		}
+	}
+	return str
+
+}
 
 // ====================== //
 // == HTTP aggregation == //

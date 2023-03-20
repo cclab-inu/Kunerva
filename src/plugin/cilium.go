@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net"
 	"net/url"
@@ -11,11 +12,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/accuknox/knoxAutoPolicy/src/libs"
-	"github.com/accuknox/knoxAutoPolicy/src/types"
+	"github.com/cclab-inu/Kunerva/src/libs"
+	"github.com/cclab-inu/Kunerva/src/types"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	// "github.com/cilium/cilium/pkg/policy/api"
 	flow "github.com/cilium/cilium/api/v1/flow"
@@ -111,7 +113,7 @@ func getHTTP(flow *flow.Flow) (string, string) {
 	return "", ""
 }
 
-func isFromDNSQuery(log types.KnoxNetworkLog, dnsToIPs map[string][]string) string {
+func isFromDNSQuery(log types.K8sNetworkLog, dnsToIPs map[string][]string) string {
 	for domain, v := range dnsToIPs {
 		if libs.ContainsElement(v, log.DstPodName) {
 			return domain
@@ -122,8 +124,8 @@ func isFromDNSQuery(log types.KnoxNetworkLog, dnsToIPs map[string][]string) stri
 }
 
 // ConvertCiliumFlowToKnoxLog function
-func ConvertCiliumFlowToKnoxLog(flow *flow.Flow, dnsToIPs map[string][]string) (types.KnoxNetworkLog, bool) {
-	log := types.KnoxNetworkLog{}
+func ConvertCiliumFlowToKnoxLog(flow *flow.Flow, dnsToIPs map[string][]string) (types.K8sNetworkLog, bool) {
+	log := types.K8sNetworkLog{}
 
 	// set action
 	if flow.Verdict == 2 {
@@ -310,9 +312,9 @@ func ConvertMySQLDocsToCiliumFlows(docs []map[string]interface{}) []*flow.Flow {
 }
 
 // ConvertCiliumFlowsToKnoxLogs function
-func ConvertCiliumFlowsToKnoxLogs(targetNamespace string, flows []*flow.Flow, dnsToIPs map[string][]string) []types.KnoxNetworkLog {
-	logMap := map[types.KnoxNetworkLog]bool{}
-	networkLogs := []types.KnoxNetworkLog{}
+func ConvertCiliumFlowsToKnoxLogs(targetNamespace string, flows []*flow.Flow, dnsToIPs map[string][]string) []types.K8sNetworkLog {
+	logMap := map[types.K8sNetworkLog]bool{}
+	networkLogs := []types.K8sNetworkLog{}
 
 	for _, flow := range flows {
 		if flow.Source.Namespace != targetNamespace && flow.Destination.Namespace != targetNamespace {
@@ -627,7 +629,7 @@ func ConvertKnoxPoliciesToCiliumPolicies(services []types.Service, policies []ty
 // == Cilium Hubble Relay == //
 // ========================= //
 
-// ConnectHubbleRelay function.
+// ConnectHubbleRelay function
 func ConnectHubbleRelay() *grpc.ClientConn {
 	port := libs.GetEnv("HUBBLE_PORT", "80")
 
@@ -690,11 +692,6 @@ func GetCiliumFlowsFromHubble() []*flow.Flow {
 	return results
 }
 
-// PushTrafficFlowToDB function
-func PushTrafficFlowToDB() {
-
-}
-
 // StartHubbleRelay function
 func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 	conn := ConnectHubbleRelay()
@@ -704,11 +701,29 @@ func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 	client := observer.NewObserverClient(conn)
 
 	req := &observer.GetFlowsRequest{
-		Follow:    true,
-		Whitelist: nil,
-		Blacklist: nil,
-		Since:     timestamppb.Now(),
-		Until:     nil,
+		Follow: true,
+		Whitelist: []*flow.FlowFilter{
+			{
+				TcpFlags: []*flow.TCPFlags{
+					{SYN: true},
+				},
+			},
+			{
+				Protocol: []string{"udp"},
+				Reply:    []bool{false},
+			},
+			{
+				Protocol: []string{"icmp", "http", "dns"},
+			},
+		},
+		Blacklist: []*flow.FlowFilter{
+			{
+				TcpFlags: []*flow.TCPFlags{
+					{ACK: true},
+				},
+			},
+		},
+		Since: timestamppb.Now(),
 	}
 
 	if stream, err := client.GetFlows(context.Background(), req); err == nil {
@@ -744,4 +759,164 @@ func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 	} else {
 		log.Error().Msg("unable to stream network flow: " + err.Error())
 	}
+}
+
+// PushTrafficFlowToDB function
+func PushTrafficFlowToDB() {
+	// CiliumFlowsMutex.Lock()
+
+	// CiliumFlowsMutex.Unlock()
+}
+
+func convertFlowLogToCiliumLog(flowLog *flow.Flow) (types.CiliumLog, error) {
+	ciliumLog := types.CiliumLog{}
+
+	if flowLog == nil {
+		return ciliumLog, errors.New("cilium flow log empty")
+	}
+
+	// l3
+	var ip flow.IP
+	//Check l3 exist
+	if flowLog.IP != nil {
+		ip = *flowLog.IP
+	}
+	// l4
+	var l4TCP flow.TCP
+	var l4UDP flow.UDP
+	var l4ICMPv4 flow.ICMPv4
+	var l4ICMPv6 flow.ICMPv6
+	//Check l4 exist
+	if flowLog.L4 != nil {
+		//Check TCP exist
+		if flowLog.L4.GetTCP() != nil {
+			l4TCP = *flowLog.L4.GetTCP()
+		}
+		//Check UDP exist
+		if flowLog.L4.GetUDP() != nil {
+			l4UDP = *flowLog.L4.GetUDP()
+		}
+		//Check ICMPv4 exist
+		if flowLog.L4.GetICMPv4() != nil {
+			l4ICMPv4 = *flowLog.L4.GetICMPv4()
+		}
+		//Check ICMPv6 exist
+		if flowLog.L4.GetICMPv6() != nil {
+			l4ICMPv6 = *flowLog.L4.GetICMPv6()
+		}
+	}
+	//Endpoint for source and destination
+	var source, destination flow.Endpoint
+	//Check Source Endpoint exist
+	if flowLog.Source != nil {
+		source = *flowLog.Source
+	}
+	//Check Destination Endpoint exist
+	if flowLog.Destination != nil {
+		destination = *flowLog.Destination
+	}
+
+	//l7
+	var l7 flow.Layer7
+	var l7Type string
+	var l7DNS flow.DNS
+	var l7HTTP flow.HTTP
+	var l7HTTPHeaders string
+	//Check l7 exist
+	if flowLog.L7 != nil {
+		l7 = *flowLog.GetL7()
+		l7Type = l7.GetType().Enum().String()
+		//Check DNS exist
+		if l7.GetDns() != nil {
+			l7DNS = *l7.GetDns()
+		}
+		//Check HTTP exist
+		if l7.GetHttp() != nil {
+			l7HTTP = *l7.GetHttp()
+			var headers []string
+			//Check Headers exist
+			if l7HTTP.GetHeaders() != nil {
+				//convert headers in key=value format.
+				for _, header := range l7HTTP.Headers {
+					headers = append(headers, header.Key+"="+header.Value)
+				}
+				//convert http Header into string format
+				l7HTTPHeaders = libs.ConvertArrayToString(headers)
+			}
+		}
+	}
+
+	//EventType
+	var eventType, eventSubType int32
+	if flowLog.EventType != nil {
+		eventType = flowLog.EventType.GetType()
+		eventSubType = flowLog.EventType.GetSubType()
+	}
+
+	//Service Name for source and destination
+	var sourceService, destinationService flow.Service
+	//Check Service Source exist
+	if flowLog.SourceService != nil {
+		sourceService = *flowLog.GetSourceService()
+	}
+	//Check Service Destination exist
+	if flowLog.DestinationService != nil {
+		destinationService = *flowLog.GetDestinationService()
+	}
+
+	var isReply wrapperspb.BoolValue
+	//Check IsReply exist
+	if flowLog.IsReply != nil {
+		isReply = *flowLog.IsReply
+	}
+
+	var dropReason string
+	//Check Verdict is Dropped
+	if flowLog.GetVerdict().Enum().String() == "DROPPED" {
+		dropReason = flowLog.GetDropReasonDesc().Enum().String()
+	}
+
+	ciliumLog.Verdict = flowLog.GetVerdict().Enum().String()
+	ciliumLog.IpSource = ip.Source
+	ciliumLog.IpDestination = ip.Destination
+	ciliumLog.IpVersion = ip.GetIpVersion().Enum().String()
+	ciliumLog.IpEncrypted = ip.Encrypted
+	ciliumLog.L4TCPSourcePort = l4TCP.SourcePort
+	ciliumLog.L4TCPDestinationPort = l4TCP.DestinationPort
+	ciliumLog.L4UDPSourcePort = l4UDP.SourcePort
+	ciliumLog.L4UDPDestinationPort = l4UDP.DestinationPort
+	ciliumLog.L4ICMPv4Type = l4ICMPv4.Type
+	ciliumLog.L4ICMPv4Code = l4ICMPv4.Code
+	ciliumLog.L4ICMPv6Type = l4ICMPv6.Type
+	ciliumLog.L4ICMPv6Code = l4ICMPv6.Code
+	ciliumLog.SourceNamespace = source.Namespace
+	ciliumLog.SourceLabels = libs.ConvertArrayToString(source.Labels)
+	ciliumLog.SourcePodName = source.PodName
+	ciliumLog.DestinationNamespace = destination.Namespace
+	ciliumLog.DestinationLabels = libs.ConvertArrayToString(destination.Labels)
+	ciliumLog.DestinationPodName = destination.PodName
+	ciliumLog.Type = flowLog.GetType().Enum().String()
+	ciliumLog.NodeName = flowLog.NodeName
+	ciliumLog.L7Type = l7Type
+	ciliumLog.L7DnsCnames = libs.ConvertArrayToString(l7DNS.Cnames)
+	ciliumLog.L7DnsObservationsource = l7DNS.ObservationSource
+	ciliumLog.L7HttpCode = l7HTTP.Code
+	ciliumLog.L7HttpMethod = l7HTTP.Method
+	ciliumLog.L7HttpUrl = l7HTTP.Url
+	ciliumLog.L7HttpProtocol = l7HTTP.Protocol
+	ciliumLog.L7HttpHeaders = l7HTTPHeaders
+	ciliumLog.EventTypeType = eventType
+	ciliumLog.EventTypeSubType = eventSubType
+	ciliumLog.SourceServiceName = sourceService.Name
+	ciliumLog.SourceServiceNamespace = sourceService.Namespace
+	ciliumLog.DestinationServiceName = destinationService.Name
+	ciliumLog.DestinationServiceNamespace = destinationService.Namespace
+	ciliumLog.TrafficDirection = flowLog.GetTrafficDirection().Enum().String()
+	ciliumLog.TraceObservationPoint = flowLog.GetTraceObservationPoint().Enum().String()
+	ciliumLog.DropReasonDesc = dropReason
+	ciliumLog.IsReply = isReply.Value
+	ciliumLog.StartTime = flowLog.Time.Seconds
+	ciliumLog.UpdatedTime = flowLog.Time.Seconds
+
+	return ciliumLog, nil
 }
