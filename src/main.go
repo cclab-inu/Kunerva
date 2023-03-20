@@ -28,6 +28,7 @@ func runCommand(commandStr string) {
 
 func main() {
 	time.Sleep(5 * time.Millisecond)
+
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("> ")
@@ -37,5 +38,4 @@ func main() {
 		}
 		runCommand(cmdString)
 	}
-
 }

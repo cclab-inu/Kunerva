@@ -12,7 +12,7 @@ export DB_HOST=127.0.0.1
 
 # table info
 export TB_NETWORK_FLOW=network_flow
-export TB_DISCOVERED_POLICY=discovered_policy
+export TB_DISCOVERED_POLICY=network_policy
 
 # output dir info
 export OUT_DIR=$KUNERVA_HOME/policies/
@@ -21,7 +21,7 @@ export OUT_DIR=$KUNERVA_HOME/policies/
 export DISCOVERY_MODE=egress+ingress
 
 # available network log source: hubble | db
-export NETWORK_LOG_FROM=hubble
+export NETWORK_LOG_FROM=db
 
 # cilium hubble info (if connect to hubble directly)
 export HUBBLE_URL=127.0.0.1

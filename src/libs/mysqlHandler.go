@@ -14,7 +14,6 @@ import (
 func init() {
 	CreateTableNetworkPolicyMySQL()
 	CreateTableNetworkLogsMySQL()
-	ClearDBTablesMySQL()
 }
 
 // ConnectMySQL function
@@ -70,7 +69,7 @@ func CreateTableNetworkPolicyMySQL() error {
 			"	`outdated` varchar(50) DEFAULT NULL," +
 			"	`spec` JSON DEFAULT NULL," +
 			"	`generatedTime` bigint NOT NULL," +
-			"	`updatedTime` bigint NOT NULL," +
+			// "	`updatedTime` bigint NOT NULL," +
 			"	PRIMARY KEY (`id`)" +
 			"  );"
 

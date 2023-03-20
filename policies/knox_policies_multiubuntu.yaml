@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: KnoxNetworkPolicy
+metadata:
+  name: autopol-egress-xvlbzgbaicmrajw
+  namespace: multiubuntu
+  rule: matchLabels+toPorts
+  status: latest
+  type: egress
+spec:
+  selector:
+    matchLabels:
+      container: ubuntu-1
+      group: group-1
+  egress:
+  - matchLabels:
+      container: ubuntu-4
+      group: group-2
+      k8s:io.kubernetes.pod.namespace: multiubuntu
+    toPorts:
+    - port: "8000"
+      protocol: tcp
+  action: allow
+generatedTime: 1679334486
+---
+apiVersion: v1
+kind: KnoxNetworkPolicy
+metadata:
+  name: autopol-ingress-whthctcuaxhxkqf
+  namespace: multiubuntu
+  rule: matchLabels+toPorts
+  status: latest
+  type: ingress
+spec:
+  selector:
+    matchLabels:
+      container: ubuntu-4
+      group: group-2
+  ingress:
+  - matchLabels:
+      container: ubuntu-1
+      group: group-1
+      k8s:io.kubernetes.pod.namespace: multiubuntu
+    toPorts:
+    - port: "8000"
+      protocol: tcp
+  action: allow
+generatedTime: 1679334486
+---

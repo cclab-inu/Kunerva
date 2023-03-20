@@ -721,6 +721,12 @@ func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 					{ACK: true},
 				},
 			},
+			{
+				DestinationLabel: []string{"k8s:io.cilium.k8s.namespace.labels.kubernetes.io/metadata.name=kube-system"},
+			},
+			{
+				SourceLabel: []string{"k8s:io.cilium.k8s.namespace.labels.kubernetes.io/metadata.name=kube-system"},
+			},
 		},
 		Since: timestamppb.Now(),
 	}
