@@ -6,7 +6,7 @@ export KUNERVA_HOME=`dirname $(realpath "$0")`/..
 export DB_DRIVER=mysql
 export DB_PORT=3306
 export DB_USER=root
-export DB_PASS=Seungsoo1004!
+export DB_PASS=cclab
 export DB_NAME=flow_management
 export DB_HOST=127.0.0.1
 
