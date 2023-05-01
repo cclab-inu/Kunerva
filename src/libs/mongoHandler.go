@@ -152,3 +152,10 @@ func GetTrafficFlowFromMongo(startTime, endTime int64) ([]map[string]interface{}
 
 	return docs, nil
 }
+
+// InsertNetworkLogsMongoDB
+func InsertNetworkLogsMongoDB(netLogs []types.NetworkLogRaw) error {
+	var err error = nil
+
+	return err
+}

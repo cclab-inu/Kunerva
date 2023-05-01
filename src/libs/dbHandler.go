@@ -210,5 +210,9 @@ func UpdateOrInsertNetworkLogs(netLogs []types.NetworkLogRaw) {
 		if err := InsertNetworkLogsMySQL(netLogs); err != nil {
 			log.Error().Msg(err.Error())
 		}
+	} else if DBDriver == "mongodb" {
+		if err := InsertNetworkLogsMongoDB(netLogs); err != nil {
+			log.Error().Msg(err.Error())
+		}
 	}
 }
