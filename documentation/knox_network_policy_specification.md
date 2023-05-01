@@ -4,7 +4,7 @@ The specification of a knox network policy is as follow.
 
 ```
 apiVersion: v1
-kind:KnoxNetworkPolicy
+kind:GenericNetworkPolicy
 
 metadata:
   name: [policy name]
