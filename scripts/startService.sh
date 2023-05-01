@@ -21,7 +21,7 @@ export OUT_DIR=$KUNERVA_HOME/policies/
 export DISCOVERY_MODE=egress+ingress
 
 # available network log source: hubble | db
-export NETWORK_LOG_FROM=db
+export NETWORK_LOG_FROM=hubble
 
 # cilium hubble info (if connect to hubble directly)
 export HUBBLE_URL=127.0.0.1
