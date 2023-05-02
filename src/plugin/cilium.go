@@ -31,6 +31,7 @@ var CiliumFlows []*flow.Flow
 
 // CiliumFlowsMutex mutext
 var CiliumFlowsMutex *sync.Mutex
+var CiliumNSFiler string
 
 func init() {
 	env := libs.GetEnv("CIDR_ENABLED", "true")
@@ -39,6 +40,8 @@ func init() {
 	} else {
 		cidrEanbeld = true
 	}
+
+	CiliumNSFiler = libs.GetEnv("FLOW_NAMESPACE_FILTER", "default")
 
 	// init mutex
 	CiliumFlowsMutex = &sync.Mutex{}
@@ -320,8 +323,8 @@ func ConvertCiliumFlowsToKnoxLogs(targetNamespace string, flows []*flow.Flow, dn
 			continue
 		}
 
-		// TODO: packet is dropped (flow.Verdict == 2) and drop reason == 181 (Flows denied by deny policy)?
-		if flow.Verdict == 2 && flow.DropReason == 181 {
+		// TODO: packet is dropped (flow.Verdict == 2)
+		if flow.Verdict == 2 {
 			continue
 		}
 
@@ -703,16 +706,10 @@ func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 		Follow: true,
 		Whitelist: []*flow.FlowFilter{
 			{
-				TcpFlags: []*flow.TCPFlags{
-					{SYN: true},
-				},
+				SourcePod: []string{CiliumNSFiler + "/"},
 			},
 			{
-				Protocol: []string{"udp"},
-				Reply:    []bool{false},
-			},
-			{
-				Protocol: []string{"icmp", "http", "dns"},
+				DestinationPod: []string{CiliumNSFiler + "/"},
 			},
 		},
 		Blacklist: []*flow.FlowFilter{
@@ -720,12 +717,6 @@ func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 				TcpFlags: []*flow.TCPFlags{
 					{ACK: true},
 				},
-			},
-			{
-				DestinationLabel: []string{"k8s:io.cilium.k8s.namespace.labels.kubernetes.io/metadata.name=kube-system"},
-			},
-			{
-				SourceLabel: []string{"k8s:io.cilium.k8s.namespace.labels.kubernetes.io/metadata.name=kube-system"},
 			},
 		},
 		Since: timestamppb.Now(),

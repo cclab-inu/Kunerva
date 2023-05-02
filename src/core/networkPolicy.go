@@ -1565,7 +1565,8 @@ func HandleErrRet(ret *bool) {
 }
 
 // DiscoverNetworkPolicies Function
-func DiscoverNetworkPolicies(namespace string,
+func DiscoverNetworkPolicies(
+	namespace string,
 	cidrBits int, // for CIDR policy (24bits in default, 32 bits -> per IP)
 	networkLogs []types.NetworkLog,
 	services []types.Service,

@@ -21,11 +21,12 @@ export OUT_DIR=$KUNERVA_HOME/policies/
 export DISCOVERY_MODE=egress+ingress
 
 # available network log source: hubble | db
-export NETWORK_LOG_FROM=hubble
+export NETWORK_LOG_FROM=db
 
 # cilium hubble info (if connect to hubble directly)
 export HUBBLE_URL=127.0.0.1
 export HUBBLE_PORT=4245
+export FLOW_NAMESPACE_FILTER=boutique
 
 # operation mode: c=cronjob | a=at once
 if [ $# -eq 1 ]
