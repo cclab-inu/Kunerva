@@ -712,13 +712,14 @@ func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 				DestinationPod: []string{CiliumNSFiler + "/"},
 			},
 		},
-		Blacklist: []*flow.FlowFilter{
-			{
-				TcpFlags: []*flow.TCPFlags{
-					{ACK: true},
-				},
-			},
-		},
+		// Blacklist if needed
+		// Blacklist: []*flow.FlowFilter{
+		// 	{
+		// 		TcpFlags: []*flow.TCPFlags{
+		// 			{ACK: true},
+		// 		},
+		// 	},
+		// },
 		Since: timestamppb.Now(),
 	}
 

@@ -1507,9 +1507,9 @@ func generatePolicyName(networkPolicies []types.KnoxNetworkPolicy) []types.KnoxN
 	for i := range newPolicies {
 		polType := newPolicies[i].Metadata["type"]
 
-		newName := "autopol-" + polType + "-" + libs.RandSeq(15)
+		newName := "kunerva-" + polType + "-" + libs.RandSeq(15)
 		for libs.ContainsElement(autoPolicyNames, newName) {
-			newName = "autopol-" + polType + "-" + libs.RandSeq(15)
+			newName = "kunerva-" + polType + "-" + libs.RandSeq(15)
 		}
 		autoPolicyNames = append(autoPolicyNames, newName)
 
@@ -1572,8 +1572,9 @@ func DiscoverNetworkPolicies(
 	services []types.Service,
 	endpoints []types.Endpoint,
 	pods []types.Pod) []types.KnoxNetworkPolicy {
-
-	// step 1: [network logs] -> {dst: [network logs (src+dst)]}
+	/*
+	   step 1: [network logs] -> {dst: [network logs (src+dst)]}
+	*/
 	logsPerDst := groupingLogsPerDst(networkLogs, endpoints, cidrBits)
 
 	/*

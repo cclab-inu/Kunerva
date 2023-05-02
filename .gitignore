@@ -1,2 +1,3 @@
 scripts/startService.sh
 src/Kunerva
+policies/*.yaml
