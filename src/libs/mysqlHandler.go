@@ -12,8 +12,25 @@ import (
 )
 
 func init() {
+	createDB()
 	CreateTableNetworkPolicyMySQL()
 	CreateTableNetworkLogsMySQL()
+}
+
+func createDB() {
+	db, err := sql.Open(DBDriver, DBUser+":"+DBPass+"@tcp("+DBHost+":"+DBPort+")/")
+	if err != nil {
+		log.Error().Msg("connection error :" + err.Error())
+		return
+	}
+
+	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS " + DBName)
+	if err != nil {
+		log.Error().Msg("database creation error :" + err.Error())
+		return
+	}
+
+	db.Close()
 }
 
 // ConnectMySQL function
@@ -24,6 +41,7 @@ func ConnectMySQL() (db *sql.DB) {
 		time.Sleep(time.Second * 1)
 		db, err = sql.Open(DBDriver, DBUser+":"+DBPass+"@tcp("+DBHost+":"+DBPort+")/"+DBName)
 	}
+
 	return db
 }
 
