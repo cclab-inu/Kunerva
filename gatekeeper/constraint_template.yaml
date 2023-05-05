@@ -1,0 +1,91 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: policyadmission
+spec:
+  crd:
+    spec:
+      names:
+        kind: PolicyAdmission
+      validation:
+        # Schema for the `parameters` field
+        openAPIV3Schema:
+          type: object
+          properties:
+            # labels from Pod
+            matchLabels:
+              additionalProperties:
+                maxLength: 63
+                pattern: ^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$
+                type: string
+              type: object
+            # items
+            toPorts:
+              items:
+                properties:
+                  ports:
+                    items:
+                      properties:
+                        port:
+                          type: string
+                        protocol:
+                          type: string
+                      required:
+                      - port
+                      type: object
+                    type: array
+                type: object
+              type: array
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package kubernetes.admission
+
+        import future.keywords.contains
+        import future.keywords.every
+
+        # Deny with a message
+        violation[{"msg": msg}] {
+          requiredLabels := {lables | lables := input.parameters.matchLabels}
+          requiredToPorts := {toPorts | toPorts := input.parameters.toPorts[_].ports[_]}
+
+          providedLabels := {labels | labels := input.review.object.spec.endpointSelector.matchLabels}
+          providedToPorts := {toPorts | toPorts := input.review.object.spec.ingress[_].toPorts[_].ports[_]}
+
+          providedLabels == requiredLabels
+          count(providedToPorts) == count(requiredToPorts)
+          providedToPorts != requiredToPorts
+
+          msg := sprintf("type 1: requried toPorts: %v but provided: %v", [requiredToPorts, providedToPorts])
+        }
+
+        violation[{"msg": msg}] {
+          requiredLabels := {lables | lables := input.parameters.matchLabels}
+          requiredToPorts := {toPorts | toPorts := input.parameters.toPorts[_].ports[_]}
+
+          providedLabels := {labels | labels := input.review.object.spec.endpointSelector.matchLabels}
+          providedToPorts := {toPorts | toPorts := input.review.object.spec.ingress[_].toPorts[_].ports[_]}
+
+          providedLabels == requiredLabels
+          count(providedToPorts) > count(requiredToPorts)
+
+          msg := sprintf("type 2: requried toPorts: %v but provided: %v", [requiredToPorts, providedToPorts])
+        }
+
+        violation[{"msg": msg}] {
+          requiredLabels := {lables | lables := input.parameters.matchLabels}
+          requiredToPorts := {toPorts | toPorts := input.parameters.toPorts[_].ports[_]}
+
+          providedLabels := {labels | labels := input.review.object.spec.endpointSelector.matchLabels}
+          providedToPorts := {toPorts | toPorts := input.review.object.spec.ingress[_].toPorts[_].ports[_]}
+
+          providedLabels == requiredLabels
+          count(providedToPorts) < count(requiredToPorts)
+
+          every toPort in providedToPorts {
+            not toPort in requiredToPorts
+          }
+
+          msg := sprintf("type 3: requried toPorts: %v but provided: %v", [requiredToPorts, providedToPorts])
+        }
+      
