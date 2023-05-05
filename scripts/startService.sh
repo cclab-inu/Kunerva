@@ -18,7 +18,7 @@ export TB_DISCOVERED_POLICY=network_policy
 export OUT_DIR=$KUNERVA_HOME/policies/
 
 # available discovery modes: egress | ingress | egress+ingress
-export DISCOVERY_MODE=egress+ingress
+export DISCOVERY_MODE=egress
 
 # available network log source: hubble | db
 export NETWORK_LOG_FROM=db

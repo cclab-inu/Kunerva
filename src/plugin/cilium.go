@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/url"
@@ -712,7 +713,7 @@ func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 				DestinationPod: []string{CiliumNSFiler + "/"},
 			},
 		},
-		// Blacklist if needed
+		/* Blacklist if needed */
 		// Blacklist: []*flow.FlowFilter{
 		// 	{
 		// 		TcpFlags: []*flow.TCPFlags{
@@ -722,6 +723,8 @@ func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 		// },
 		Since: timestamppb.Now(),
 	}
+
+	count := 0
 
 	if stream, err := client.GetFlows(context.Background(), req); err == nil {
 		for {
@@ -747,6 +750,10 @@ func StartHubbleRelay(StopChan chan struct{}, wg *sync.WaitGroup) {
 						continue
 					}
 					libs.InsertNetworkLogsMySQL([]types.NetworkLogRaw{log})
+					count++
+					if count%100 == 0 {
+						fmt.Println(count, time.Now())
+					}
 				}
 			}
 		}

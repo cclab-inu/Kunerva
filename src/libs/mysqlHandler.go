@@ -213,7 +213,7 @@ func GetTrafficFlowByIDTime(id, endTime int64) ([]map[string]interface{}, error)
 
 	QueryBase := QueryBaseSimple + TableNetworkFlow
 
-	rows, err := db.Query(QueryBase+" WHERE id > ? ORDER BY id ASC ", id)
+	rows, err := db.Query(QueryBase+" WHERE id > ? ORDER BY id ASC", id) // FORTEST
 	if err != nil {
 		return nil, err
 	}
