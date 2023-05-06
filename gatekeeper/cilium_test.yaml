@@ -1,21 +1,17 @@
 apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: PolicyAdmission
+kind: KunervaAdmission
 metadata:
-  name: policyadmiision1
+  name: paymentservice
 spec:
   match:
     kinds:
     - apiGroups: ["cilium.io"]
       kinds: ["CiliumNetworkPolicy"]
-    excludedNamespaces:
-    - kube-system
   parameters:
     matchLabels:
-      group: group-2
-      container: ubuntu-4
+      app: paymentservice
     toPorts:
     - ports:
-      - port: "8000"
+      - port: "50051"
         protocol: TCP
-      - port: "8090"
-        protocol: TCP
+

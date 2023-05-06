@@ -1,12 +1,12 @@
 apiVersion: templates.gatekeeper.sh/v1
 kind: ConstraintTemplate
 metadata:
-  name: policyadmission
+  name: kunervaadmission
 spec:
   crd:
     spec:
       names:
-        kind: PolicyAdmission
+        kind: KunervaAdmission
       validation:
         # Schema for the `parameters` field
         openAPIV3Schema:
