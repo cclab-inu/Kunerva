@@ -1,4 +1,7 @@
 # Kunerva
+
+> This project was published in IEEE Access (2023) as **"Kunerva: Automated Network Policy Discovery Framework for Containers."**
+
 Kunerva is a policy recommendation system that suggests network policies based on the collected network logs from the various container network interfaces (CNI) such as Cilium, Bastion, and Calico.
 
 Basically, Kunerva operates as plug-ins because each CNI employs its own scheme for the network log and network policy. Thus, Kunerva can convert each scheme to Knox General Scheme (network log/policy) and vice versa. From these functionalities, we can minimize its dependency on each CNI.
